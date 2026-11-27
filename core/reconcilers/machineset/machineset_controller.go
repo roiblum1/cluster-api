@@ -1168,11 +1168,11 @@ func (r *Reconciler) deleteMachines(ctx context.Context, s *scope, machinesToDel
 	//   - Move old machines (m1, m2, m3)
 	// - Resulting new MS at this point has 4 replicas m1, m2, m3 (updating in place) and (m4).
 	// - The system scales down MS, and the system does this getting rid of m3 - the last replica that started in place.
-	deletePriorityFunc, err := getDeletePriorityFunc(ms)
+	order, err := getDeletionOrder(ms)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	machinesToDeleteByPriority := getMachinesToDeletePrioritized(machines, machinesToDelete, deletePriorityFunc)
+	machinesToDeleteByPriority := getMachinesToDeletePrioritized(machines, machinesToDelete, order)
 
 	var errs []error
 	for i, machine := range machinesToDeleteByPriority {
@@ -1236,11 +1236,11 @@ func (r *Reconciler) startMoveMachines(ctx context.Context, s *scope, targetMSNa
 
 	// Sort to Move machine in deterministic and predictable order.
 	// Note: For convenience we sort machine using the ordering criteria defined in ms.Spec.Deletion.Order.
-	deletePriorityFunc, err := getDeletePriorityFunc(ms)
+	order, err := getDeletionOrder(ms)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	machinesToMoveByPriority := getMachinesToMovePrioritized(machines, deletePriorityFunc)
+	machinesToMoveByPriority := getMachinesToMovePrioritized(machines, order)
 
 	errs := []error{}
 	for _, machine := range machinesToMoveByPriority {
